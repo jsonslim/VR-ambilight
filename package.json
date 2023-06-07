@@ -1,0 +1,15 @@
+{
+  "name": "ambi_server",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node ./app.js"
+  },
+  "keywords": [],
+  "author": "Sergey Tarasov",
+  "license": "MIT",
+  "dependencies": {
+    "robotjs": "0.6.0"
+  }
+}

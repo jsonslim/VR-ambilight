@@ -1,0 +1,14 @@
+{
+    "ip": "localhost",
+    "port": 1234,
+    "screenWidth": 1920,
+    "screenHeight": 1080,
+    "led1x": -1,
+    "led1y": -1,
+    "led2x": -1,
+    "led2y": -1,
+    "led3x": -1,
+    "led3y": -1,
+    "led4x": -1,
+    "led4y": -1
+}
