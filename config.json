@@ -1,6 +1,7 @@
 {
     "ip": "localhost",
-    "port": 1234,
+    "port": 2222,
+    "interval": 10,
     "screenWidth": 1920,
     "screenHeight": 1080,
     "led1x": -1,

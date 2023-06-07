@@ -5,21 +5,21 @@ const fs = require('fs');
 const server = udp.createSocket('udp4');
 
 const capturePointSize = 1;
-let colorArr = [];
+let l1,l2,l3,l4 = Buffer.from('');
 
 let config = {
     ipAddress: "localhost",
-    port: 1234,
+    port: 2222,
     screenWidth: 1920,
     screenHeight: 1080,
     led1x: 0,
-    led1y: screenHeight/3,
+    led1y: this.screenHeight/3,
     led2x: 0,
-    led2y: screenHeight - screenHeight/3,
-    led3x: screenWidth-1,
-    led3y: screenHeight/3,
-    led4x: screenWidth-1,
-    led4y: screenHeight - screenHeight/3,
+    led2y: this.screenHeight - this.screenHeight/3,
+    led3x: this.screenWidth-1,
+    led3y: this.screenHeight/3,
+    led4x: this.screenWidth-1,
+    led4y: this.screenHeight - this.screenHeight/3,
 };
 
 function init(){
@@ -29,33 +29,29 @@ function init(){
 }
 
 function captureScreen(){
-  colorArr.push(robot.screen.capture(0, 0, capturePointSize, capturePointSize))
-  colorArr.push(robot.screen.capture(0, 0, capturePointSize, capturePointSize))
-  colorArr.push(robot.screen.capture(0, 0, capturePointSize, capturePointSize))
-  colorArr.push(robot.screen.capture(0, 0, capturePointSize, capturePointSize))
+  l1 = robot.screen.capture(config.led1x, config.led1y, capturePointSize, capturePointSize).image
+  l2 = robot.screen.capture(config.led2x, config.led2y, capturePointSize, capturePointSize).image
+  l3 = robot.screen.capture(config.led3x, config.led3y, capturePointSize, capturePointSize).image
+  l4 = robot.screen.capture(config.led4x, config.led4y, capturePointSize, capturePointSize).image
 }
 
 // emits when any error occurs
-// server.on('error',function(error){
-//     console.log('Error: ' + error);
-//     server.close();
-// });
+server.on('error',function(error){
+  console.log('Error: ' + error);
+  server.close();
+});
   
 // emits on new datagram msg
-// server.on('message',function(msg,info){
-//   console.log('Data received from client : ' + msg.toString());
-//   console.log('Received %d bytes from %s:%d\n',msg.length, info.address, info.port);  
-// });
-
+server.on('message',function(msg,info){
+  console.log('Data received from client : ' + msg.toString());
+  console.log('Received %d bytes from %s:%d\n',msg.length, info.address, info.port);  
+});
 
 // main loop   
 setInterval(()=>{
   captureScreen();
-  console.log(colorArr);
-
+  console.log([l1,l2,l3,l4]);
   // send color to leds module
-  server.send(colorArr, config.port, config.ip); // callback can be added here
-
-  // clear array
-  colorArr.length = 0; 
+  server.send([l1,l2,l3,l4], config.port, config.ip); // callback can be added here
+ 
 },1000);
