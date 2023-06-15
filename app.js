@@ -5,7 +5,7 @@ const fs = require('fs');
 const server = udp.createSocket('udp4');
 
 const capturePointSize = 1;
-let l1,l2,l3,l4 = Buffer.from('');
+let l1,l2,l3,l4 = Buffer.alloc(3);
 
 let config = {
     ipAddress: "localhost",
@@ -29,10 +29,10 @@ function init(){
 }
 
 function captureScreen(){
-  l1 = robot.screen.capture(config.led1x, config.led1y, capturePointSize, capturePointSize).image
-  l2 = robot.screen.capture(config.led2x, config.led2y, capturePointSize, capturePointSize).image
-  l3 = robot.screen.capture(config.led3x, config.led3y, capturePointSize, capturePointSize).image
-  l4 = robot.screen.capture(config.led4x, config.led4y, capturePointSize, capturePointSize).image
+  l1 = robot.screen.capture(config.led1x, config.led1y, capturePointSize, capturePointSize).image.slice(0,3)
+  l2 = robot.screen.capture(config.led2x, config.led2y, capturePointSize, capturePointSize).image.slice(0,3)
+  l3 = robot.screen.capture(config.led3x, config.led3y, capturePointSize, capturePointSize).image.slice(0,3)
+  l4 = robot.screen.capture(config.led4x, config.led4y, capturePointSize, capturePointSize).image.slice(0,3)
 }
 
 // emits when any error occurs
