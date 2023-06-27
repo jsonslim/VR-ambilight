@@ -1,6 +1,6 @@
 {
-    "ip": "localhost",
-    "port": 2222,
+    "ip": "192.168.0.2",
+    "port": 2221,
     "interval": 10,
     "screenWidth": 1920,
     "screenHeight": 1080,

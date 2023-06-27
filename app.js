@@ -8,7 +8,7 @@ const capturePointSize = 1;
 let l1,l2,l3,l4 = Buffer.alloc(3);
 
 let config = {
-    ipAddress: "localhost",
+    ip: "localhost",
     port: 2222,
     screenWidth: 1920,
     screenHeight: 1080,
@@ -25,7 +25,8 @@ let config = {
 function init(){
     // read config.json and set variables in config var
     const fileData = fs.readFileSync('./config.json', 'utf-8');
-    config = JSON.parse(fileData)
+    config = JSON.parse(fileData);
+    console.log(`Init successful IP:${config.ip} Port:${config.port}`);
 }
 
 function captureScreen(){
@@ -47,6 +48,10 @@ server.on('message',function(msg,info){
   console.log('Received %d bytes from %s:%d\n',msg.length, info.address, info.port);  
 });
 
+
+// ==== run ==== //
+init();
+
 // main loop   
 setInterval(()=>{
   captureScreen();
@@ -54,4 +59,4 @@ setInterval(()=>{
   // send color to leds module
   server.send([l1,l2,l3,l4], config.port, config.ip); // callback can be added here
  
-},1000);
+}, 1000);
