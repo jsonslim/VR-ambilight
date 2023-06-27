@@ -14,7 +14,7 @@ The app settings can be adjusted through the config.json, the most important are
 The app is in the proof-of-concept stage, which means that you can try experimenting with it by making different settings through config.json, but it's not a ready product. This app will be replaced by an Android app for the Pico4 device and/or a SteamVR addon if the concept is successful.
 
 
-## Now it has couple inconviniences: 
+## Now it has couple of inconviniences: 
 
 * If you have multiple monitors, you can't select which one is captured. Currently the app catches only the 1st display. So you will need to drag the SteamVR window to this display.
 * It captures actual PC display, giving not precise color representation.
