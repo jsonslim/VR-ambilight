@@ -1,7 +1,7 @@
 {
     "ip": "192.168.0.2",
     "port": 2221,
-    "interval": 10,
+    "refreshRate": 10,
     "screenWidth": 1920,
     "screenHeight": 1080,
     "led1x": 1,

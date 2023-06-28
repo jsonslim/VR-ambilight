@@ -12,7 +12,7 @@ let config = {
     port: 2222,
     screenWidth: 1920,
     screenHeight: 1080,
-    refreshRate: 10,
+    refreshRate: 16,
     led1x: 0,
     led1y: this.screenHeight/3,
     led2x: 0,
