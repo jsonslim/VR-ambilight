@@ -12,6 +12,7 @@ let config = {
     port: 2222,
     screenWidth: 1920,
     screenHeight: 1080,
+    refreshRate: 10,
     led1x: 0,
     led1y: this.screenHeight/3,
     led2x: 0,
@@ -26,10 +27,11 @@ function init(){
     // read config.json and set variables in config var
     const fileData = fs.readFileSync('./config.json', 'utf-8');
     config = JSON.parse(fileData);
-    console.log(`Init successful IP:${config.ip} Port:${config.port}`);
+    console.log(`-=Init successful=- \nip: ${config.ip} \nport: ${config.port}`);
 }
 
 function captureScreen(){
+  // get RGB componet by pixel coordinate to each led 
   l1 = robot.screen.capture(config.led1x, config.led1y, capturePointSize, capturePointSize).image.slice(0,3)
   l2 = robot.screen.capture(config.led2x, config.led2y, capturePointSize, capturePointSize).image.slice(0,3)
   l3 = robot.screen.capture(config.led3x, config.led3y, capturePointSize, capturePointSize).image.slice(0,3)
@@ -55,8 +57,9 @@ init();
 // main loop   
 setInterval(()=>{
   captureScreen();
-  console.log([l1,l2,l3,l4]);
-  // send color to leds module
+  // console.log([l1,l2,l3,l4]);
+
+  // send color data to leds module
   server.send([l1,l2,l3,l4], config.port, config.ip); // callback can be added here
  
-}, 1000);
+}, config.refreshRate);
