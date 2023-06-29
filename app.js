@@ -6,6 +6,7 @@ const server = udp.createSocket('udp4');
 
 const capturePointSize = 1;
 let l1,l2,l3,l4 = Buffer.alloc(3);
+let captureMode = "singlePixel"; // + standby + areaMode +
 
 let config = {
     ip: "localhost",
@@ -24,10 +25,14 @@ let config = {
 };
 
 function init(){
+  try {
     // read config.json and set variables in config var
     const fileData = fs.readFileSync('./config.json', 'utf-8');
     config = JSON.parse(fileData);
     console.log(`-=Init successful=- \nip: ${config.ip} \nport: ${config.port}`);
+  } catch (error) {
+    console.log(error.message);
+  }
 }
 
 function captureScreenSinglePixel(){
@@ -37,6 +42,8 @@ function captureScreenSinglePixel(){
   l3 = robot.screen.capture(config.led3x, config.led3y, capturePointSize, capturePointSize).image.slice(0,3)
   l4 = robot.screen.capture(config.led4x, config.led4y, capturePointSize, capturePointSize).image.slice(0,3)
 }
+
+function captureDisplayArea(){}
 
 // emits when any error occurs
 server.on('error',function(error){
@@ -48,6 +55,8 @@ server.on('error',function(error){
 server.on('message',function(msg,info){
   console.log('Data received from client : ' + msg.toString());
   console.log('Received %d bytes from %s:%d\n',msg.length, info.address, info.port);  
+  // todo add screen capture mode variable set
+  captureMode = msg.toString();
 });
 
 
@@ -56,7 +65,9 @@ init();
 
 // main loop   
 setInterval(()=>{
-  captureScreenSinglePixel();
+  if(captureMode === "singlePixel"){ captureScreenSinglePixel() }
+  else if(captureMode === "dispArea"){ captureDisplayArea() }
+  else if(captureMode === "standby"){ /* we wait*/ }
   // console.log([l1,l2,l3,l4]);
 
   // send color data to leds module
