@@ -30,7 +30,7 @@ function init(){
     console.log(`-=Init successful=- \nip: ${config.ip} \nport: ${config.port}`);
 }
 
-function captureScreen(){
+function captureScreenSinglePixel(){
   // get RGB componet by pixel coordinate to each led 
   l1 = robot.screen.capture(config.led1x, config.led1y, capturePointSize, capturePointSize).image.slice(0,3)
   l2 = robot.screen.capture(config.led2x, config.led2y, capturePointSize, capturePointSize).image.slice(0,3)
@@ -56,7 +56,7 @@ init();
 
 // main loop   
 setInterval(()=>{
-  captureScreen();
+  captureScreenSinglePixel();
   // console.log([l1,l2,l3,l4]);
 
   // send color data to leds module
