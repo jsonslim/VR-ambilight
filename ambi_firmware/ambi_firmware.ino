@@ -1,135 +1,142 @@
 #include <WiFi.h>
-#include <WiFiUdp.h>
+#include <AsyncUDP.h>
+#include <Adafruit_NeoPixel.h>
 
+// Which pin on the Arduino is connected to the NeoPixels?
+#define PIN 5
 
-const int buttonPin = 2;
-int packetSize = 12; // r+g+b * 4(leds) 
+// How many NeoPixels are attached to the Arduino?
+#define NUMPIXELS 4
 
-// Variable to store the button state
-volatile int currentMode = 0; // 0 - standby, 1- single pixel mode, 2 - display area calculated
-volatile int previousMode = 0; 
+// When setting up the NeoPixel library, we tell it how many pixels,
+// and which pin to use to send signals. Note that for older NeoPixel
+// strips you might need to change the third parameter -- see the
+// strandtest example for more information on possible values.
+Adafruit_NeoPixel pixels(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800);
 
-// Variables for debounce logic
-const unsigned long debounceDelay = 50;
-volatile unsigned long lastDebounceTime = 0;
+const int packetSize = 12; // r+g+b * 4(leds) 
+
+// Variable to store the device state
+volatile bool currentMode = true; // 0 - standby, 1 - active
+volatile bool previousMode = true; 
+
+// Variables for button logic
+const int buttonPin = 27;
+const unsigned long debounceDelay = 250;
+unsigned long button_time = 0;  
+unsigned long last_button_time = 0;
+bool buttonPressed = false;
 volatile int lastButtonState = HIGH;
 
 // Network variables
-const char* ssid = "your_SSID";         // WiFi network SSID
-const char* password = "your_PASSWORD"; // WiFi network password
-
-WiFiUDP udp;
-const uint16_t udpPort = 1234; // UDP port to listen on
-IPAddress udpAddress(192, 168, 1, 100); // IP address to listen to
+const char* ssid = "****";     // WiFi network SSID
+const char* password = "****";          // WiFi network password
+const uint16_t udpServerPort = 5554;
+const uint16_t udpBoardPort = 5555;
+IPAddress ip = IPAddress(192, 168, 0, 23);  // IP address of the server
 uint8_t buffer[packetSize];
+AsyncUDP udp;
+
+uint8_t buf[20];
 
 void IRAM_ATTR buttonISR() {
-  // Check the debounce state of the button
-  if ((millis() - lastDebounceTime) >= debounceDelay) {
-    // Read the current button state
-    int buttonState = digitalRead(buttonPin);
-
-    // Check if the button state has changed
-    if (buttonState != lastButtonState) {
-      // Update the last button state
-      lastButtonState = buttonState;
-
-      if (buttonState == LOW) {
-        mode++;
-        if (mode > 2) {
-          mode = 0;
-        }
-
-        // Print the updated state to the serial monitor
-        Serial.print("State changed to: ");
-        Serial.println(mode);
-      }
-    }
+  button_time = millis();
+  if ((button_time - last_button_time ) >= debounceDelay) {
+   buttonPressed = true;
+   currentMode = !currentMode;
+   last_button_time = button_time;
   }
+}
 
-  // Update the debounce time
-  lastDebounceTime = millis();
+void printPacketDetails(AsyncUDPPacket packet){
+  Serial.print(", From: ");
+  Serial.print(packet.remoteIP());
+  Serial.print(":");
+  Serial.print(packet.remotePort());
+  Serial.print(", To: ");
+  Serial.print(packet.localIP());
+  Serial.print(":");
+  Serial.print(packet.localPort());
+  Serial.print(", Length: ");
+  Serial.print(packet.length());
+  Serial.print(", Data: ");
+  Serial.write(packet.data(), packet.length());
+  Serial.println();
 }
 
 void updateLeds(){
-  // Check if there's a UDP packet available
-  packetSize = udp.parsePacket();
+  pixels.setPixelColor(0, pixels.Color(buf[2],buf[1],buf[0])); // not RGB but BGR
+  pixels.setPixelColor(1, pixels.Color(buf[5],buf[4],buf[3]));
+  pixels.setPixelColor(2, pixels.Color(buf[8],buf[7],buf[6]));
+  pixels.setPixelColor(3, pixels.Color(buf[11],buf[10],buf[9]));
+  pixels.show();
+}
 
-  if (packetSize) {
-    if (udp.remoteIP() == udpAddress) {
-      // Read the UDP packet into the buffer
-      udp.read(buffer, packetSize);
-
-      // Print the received uint array
-      Serial.print("Received uint array: ");
-      for (int i = 0; i < packetSize; i++) {
-        Serial.print(buffer[i]);
-        Serial.print(" ");
-      }      
-      Serial.println();
-
-      // todo send to Leds
-    } else {
-      // Ignore packets from other IP addresses
-      udp.flush();
-    }
+void blackoutLeds(){
+  for(int i = 0; i < 4; i++){
+    pixels.setPixelColor(i, pixels.Color(0, 0, 0));
   }
+  pixels.show();
 }
 
-void ledsBlink(bool color){
-// 0 - green, 1 - orange or smthn
+void setLedStaticColor(uint8_t R, uint8_t G, uint8_t B){
+  for(int i = 0; i < 4; i++){
+    pixels.setPixelColor(i, pixels.Color(R, G, B));
+  }
+  pixels.show();
 }
 
-void sendUdpMsg(String msg){
-
-}
-
+/* ==========================- SETUP -===============================*/
 void setup() {
-  pinMode(buttonPin, INPUT_PULLUP);
-  attachInterrupt(digitalPinToInterrupt(buttonPin), buttonISR, FALLING); // maybe RISING is better
-
+  delay(300);
   Serial.begin(115200);
 
+  pinMode(buttonPin, INPUT_PULLUP);
+  attachInterrupt(digitalPinToInterrupt(buttonPin), buttonISR, FALLING);
+
+  setLedStaticColor(1,0,0); // red glow on start
   // Connect to WiFi network
+  WiFi.setHostname("ESP32_Ambilight_client");
   WiFi.begin(ssid, password);
   while (WiFi.status() != WL_CONNECTED) {
-    delay(1000);
+    delay(500);
     Serial.println("Connecting to WiFi...");
   }
 
   Serial.println("Connected to WiFi");
 
-  // Start UDP server
-  if (udp.begin(udpPort)) {
-    Serial.print("UDP server started on port ");
-    Serial.println(udpPort);
+  // Start UDP client
+  if (udp.listen(udpBoardPort)) {
+    Serial.print("UDP Listening on IP: ");
+    Serial.println(WiFi.localIP());
+    udp.onPacket([](AsyncUDPPacket packet) {
+      // printPacketDetails(packet);
+
+      // ==== set the global led buffer & update leds color ==== //
+      for (int i=0;i<packet.length();i++){
+        buf[i]= *(packet.data()+i);
+      }
+
+      updateLeds();
+    });
   } else {
-    Serial.println("Failed to start UDP server");
+    Serial.println("Failed to start UDP client");
   }
 }
 
+/* ==========================- LOOP -===============================*/
 void loop() {
-
-  if(currentMode == 0){
-    if(currentMode != previousMode){
-      sendUdpMsg("standby");
-      // todo leds off
-      previousMode = currentMode;
+  if (buttonPressed) {
+    if(currentMode){
+      const char* message = "dispArea";
+      udp.writeTo((const uint8_t*)message, strlen(message), ip, udpServerPort);
+    } else {
+      const char* message = "standby";
+      udp.writeTo((const uint8_t*)message, strlen(message), ip, udpServerPort);
+      delay(500);
+      blackoutLeds();
     }
-  } else if (mode == 1) {
-    if(previousMode != currentMode){
-      sendUdpMsg("singlePixel");
-      ledsBlink();
-      previousMode = currentMode;
-    }
-    updateLeds();
-
-  } else if (mode == 2){
-    if(previousMode != currentMode){
-      sendUdpMsg("dispArea");
-      ledsBlink();
-      previousMode = currentMode;
-    }
-    updateLeds();
-  }  
+    // Serial.printf("Device active: %u\n", currentMode);
+    buttonPressed = false;
+  }
 }

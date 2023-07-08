@@ -6,11 +6,13 @@ const server = udp.createSocket('udp4');
 
 const capturePointSize = 1;
 let l1,l2,l3,l4 = Buffer.alloc(3);
-let captureMode = "singlePixel"; // + standby + areaMode +
+// const buf = Buffer.allocUnsafe(3);
+let captureMode = "dispArea"; // + standby + dispArea
 
 let config = {
-    ip: "localhost",
-    port: 2222,
+    ip: "192.168.0.30",     // ESP32's IP
+    srvPort: 5554,          // this server port
+    boardPort: 5555,
     screenWidth: 1920,
     screenHeight: 1080,
     refreshRate: 16,
@@ -29,12 +31,32 @@ function init(){
     // read config.json and set variables in config var
     const fileData = fs.readFileSync('./config.json', 'utf-8');
     config = JSON.parse(fileData);
-    console.log(`-=Init successful=- \nip: ${config.ip} \nport: ${config.port}`);
+    // console.log(`-=Init successful=- \nip: ${config.ip} \nport: ${config.port}`);
+
+    //emits when socket is ready and listening for datagram msgs
+    server.on('listening',function(){
+      const address = server.address();
+      const port = address.port;
+      const ipaddr = address.address;
+      console.log('Server is listening at port: ' + port);
+      console.log('Server ip:' + ipaddr);
+    });
+
+    //emits after the socket is closed using socket.close();
+    server.on('close',function(){
+      console.log('Socket is closed !');
+    });
+
+    server.bind({
+      port: config.srvPort,
+      // exclusive: false,
+    });
   } catch (error) {
     console.log(error.message);
   }
 }
 
+// the easiest implementation, only for testing, not recommended for use
 function captureScreenSinglePixel(){
   // get RGB componet by pixel coordinate to each led 
   l1 = robot.screen.capture(config.led1x, config.led1y, capturePointSize, capturePointSize).image.slice(0,3)
@@ -43,7 +65,43 @@ function captureScreenSinglePixel(){
   l4 = robot.screen.capture(config.led4x, config.led4y, capturePointSize, capturePointSize).image.slice(0,3)
 }
 
-function captureDisplayArea(){}
+function captureScreenArea(x,y,width,height){
+  let l1Temp = robot.screen.capture(x,y,width,height).image;
+  let sumR = 0;
+  let sumG = 0;
+  let sumB = 0;
+
+  for(let i = 0; i < 4*540; i += 4){
+    sumB += l1Temp[i];
+  }
+  sumB = Math.floor(sumB/540);
+
+
+  for(let i = 1; i < 4*540-1; i += 4){
+    sumG += l1Temp[i];
+  }
+  sumG = Math.floor(sumG/540);
+
+
+  for(let i = 2; i < 4*540-2; i += 4){
+    sumR += l1Temp[i]; 
+  }
+  sumR = Math.floor(sumR/540);
+
+  const buf = Buffer.allocUnsafe(3);
+  buf.writeUInt8(sumB, 0);
+  buf.writeUInt8(sumG, 1);
+  buf.writeUInt8(sumR, 2);
+  return buf;
+}
+
+// main screen capture mode, it makes median color from display sides
+function captureDisplayAreas(){
+  l1 = captureScreenArea(0, 540, 1, 540);      // led1 - bottom left
+  l2 = captureScreenArea(0, 0, 1, 540);        // led2 - top left
+  l3 = captureScreenArea(1919, 0, 1, 540);     // led3 - top right
+  l4 = captureScreenArea(1919, 540, 1, 540);   // led4 - bottom right
+}
 
 // emits when any error occurs
 server.on('error',function(error){
@@ -53,9 +111,8 @@ server.on('error',function(error){
   
 // emits on new datagram msg
 server.on('message',function(msg,info){
-  console.log('Data received from client : ' + msg.toString());
-  console.log('Received %d bytes from %s:%d\n',msg.length, info.address, info.port);  
-  // todo add screen capture mode variable set
+  console.log('Data received : ' + msg.toString());
+  console.log('Received %d bytes from %s:%d\n',msg.length, info.address, info.port);
   captureMode = msg.toString();
 });
 
@@ -65,12 +122,13 @@ init();
 
 // main loop   
 setInterval(()=>{
-  if(captureMode === "singlePixel"){ captureScreenSinglePixel() }
-  else if(captureMode === "dispArea"){ captureDisplayArea() }
-  else if(captureMode === "standby"){ /* we wait*/ }
-  // console.log([l1,l2,l3,l4]);
-
-  // send color data to leds module
-  server.send([l1,l2,l3,l4], config.port, config.ip); // callback can be added here
- 
+  if(captureMode === "singlePixel"){ 
+    captureScreenSinglePixel();
+    server.send([l1,l2,l3,l4], config.boardPort, config.ip);
+  }
+  else if(captureMode === "dispArea"){ 
+    captureDisplayAreas(); 
+    server.send([l1,l2,l3,l4], config.boardPort, config.ip);
+  }
+  // else if(captureMode === "standby"){ /* we wait*/ }
 }, config.refreshRate);

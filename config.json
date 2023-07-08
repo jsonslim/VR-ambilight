@@ -1,7 +1,8 @@
 {
-    "ip": "192.168.0.2",
-    "port": 2221,
-    "refreshRate": 10,
+    "ip": "192.168.0.30",
+    "srvPort": 5554,
+    "boardPort": 5555,
+    "refreshRate": 20,
     "screenWidth": 1920,
     "screenHeight": 1080,
     "led1x": 1,
