@@ -29,8 +29,9 @@ bool buttonPressed = false;
 volatile int lastButtonState = HIGH;
 
 // Network variables
-const char* ssid = "****";     // WiFi network SSID
-const char* password = "****";          // WiFi network password
+// const char* ssid = "FRITZ!Box 7590 FH";     // WiFi network SSID pico4off
+const char* ssid = "pico4off";  
+const char* password = "shift123";          // WiFi network password
 const uint16_t udpServerPort = 5554;
 const uint16_t udpBoardPort = 5555;
 IPAddress ip = IPAddress(192, 168, 0, 23);  // IP address of the server
