@@ -71,21 +71,22 @@ function hexToRgb(hex) {
   return [r, g, b];
 }
 
-// the easiest implementation, only for testing, not recommended for use
-function captureScreenSinglePixel(){
-  // get RGB componet by pixel coordinate to each led 
-  l1 = robot.screen.capture(config.led1x, config.led1y, capturePointSize, capturePointSize).image.slice(0,3)
-  l2 = robot.screen.capture(config.led2x, config.led2y, capturePointSize, capturePointSize).image.slice(0,3)
-  l3 = robot.screen.capture(config.led3x, config.led3y, capturePointSize, capturePointSize).image.slice(0,3)
-  l4 = robot.screen.capture(config.led4x, config.led4y, capturePointSize, capturePointSize).image.slice(0,3)
-}
-
 // better cover LEDs with something instead using this func
 function brightnessCorrection(color, divisor){
   if(divisor === 1){
     return color;
   }
   return Math.floor(color / divisor);
+}
+
+function getMedianColor(imgBuf){
+  let sum = 0;
+  for(let i = 0; i < step*height; i += step){
+    sum += imgBuf[i];
+  }
+  sum = Math.floor(sum/height);
+  sum = brightnessCorrection(sum, config.brightnessDiv);
+  return sum;
 }
 
 // returns median color from selected area
@@ -96,21 +97,21 @@ function captureScreenArea(x,y,width,height){
   let sumB = 0;
   const step = 4;
 
-  // get median blue
+  // get median blue -> getMedianColor(imgBuf)
   for(let i = 0; i < step*height; i += step){
     sumB += imgBuffer[i];
   }
   sumB = Math.floor(sumB/height);
   sumB = brightnessCorrection(sumB, config.brightnessDiv);
 
-  // get median green
+  // get median green -> getMedianColor(imgBuf)
   for(let i = 1; i < step*height-1; i += step){
     sumG += imgBuffer[i];
   }
   sumG = Math.floor(sumG/height);
   sumG = brightnessCorrection(sumG,config.brightnessDiv);
 
-  // get median red
+  // get median red -> getMedianColor(imgBuf)
   for(let i = 2; i < step*height-2; i += step){
     sumR += imgBuffer[i]; 
   }
@@ -173,11 +174,7 @@ init();
 
 // main loop   
 setInterval(()=>{
-  if(captureMode === "singlePixel"){ 
-    captureScreenSinglePixel();
-    server.send([l1,l2,l3,l4], config.boardPort, config.boardIp);
-  }
-  else if(captureMode === "dispArea"){ 
+  if(captureMode === "dispArea"){ 
     captureScreen(10, 540); // width, height
     server.send([l1,l2,l3,l4], config.boardPort, config.boardIp);
   }
