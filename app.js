@@ -79,8 +79,10 @@ function brightnessCorrection(color, divisor){
   return Math.floor(color / divisor);
 }
 
-function getMedianColor(imgBuf){
-  let sum = 0;
+// todo get buffer lenght and calculate values from it for the loop
+function getMedianColor(imgBuf, color){
+  let sum = 0;  
+  const step = 4;
   for(let i = 0; i < step*height; i += step){
     sum += imgBuf[i];
   }
