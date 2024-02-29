@@ -4,16 +4,15 @@ const fs = require('fs');
 
 const server = udp.createSocket('udp4');
 
-const capturePointSize = 1;
 let l1,l2,l3,l4 = Buffer.alloc(3);
 // const buf = Buffer.allocUnsafe(3);
 let captureMode = "dispArea"; // + standby + dispArea
 
 // default config used if no config.json exists
 let config = {
-    boardIp: "192.168.0.30",     // ESP32 IP
-    boardPort: 5555,        // ESP32 port
-    srvPort: 5554,          // this server port
+    boardIp: "192.168.0.30",      // ESP32 IP
+    boardPort: 5555,              // ESP32 port
+    srvPort: 5554,                // this server port
     screenWidth: 1920,
     screenHeight: 1080,
     refreshRate: 16,
@@ -57,40 +56,6 @@ function init(){
   }
 }
 
-function hexToRgb(hex) {
-  // Remove the '#' character if it's present
-  hex = hex.replace(/^#/, '');
-
-  // Parse the hex color code into its red, green, and blue components
-  const bigint = parseInt(hex, 16);
-  const r = (bigint >> 16) & 255;
-  const g = (bigint >> 8) & 255;
-  const b = bigint & 255;
-
-  // Return the RGB values as an array
-  return [r, g, b];
-}
-
-// better cover LEDs with something instead using this func
-function brightnessCorrection(color, divisor){
-  if(divisor === 1){
-    return color;
-  }
-  return Math.floor(color / divisor);
-}
-
-// todo get buffer lenght and calculate values from it for the loop
-function getMedianColor(imgBuf, color){
-  let sum = 0;  
-  const step = 4;
-  for(let i = 0; i < step*height; i += step){
-    sum += imgBuf[i];
-  }
-  sum = Math.floor(sum/height);
-  sum = brightnessCorrection(sum, config.brightnessDiv);
-  return sum;
-}
-
 // returns median color from selected area
 function captureScreenArea(x,y,width,height){
   let imgBuffer = robot.screen.capture(x,y,width,height).image;
@@ -104,21 +69,18 @@ function captureScreenArea(x,y,width,height){
     sumB += imgBuffer[i];
   }
   sumB = Math.floor(sumB/height);
-  sumB = brightnessCorrection(sumB, config.brightnessDiv);
 
   // get median green -> getMedianColor(imgBuf)
   for(let i = 1; i < step*height-1; i += step){
     sumG += imgBuffer[i];
   }
   sumG = Math.floor(sumG/height);
-  sumG = brightnessCorrection(sumG,config.brightnessDiv);
 
   // get median red -> getMedianColor(imgBuf)
   for(let i = 2; i < step*height-2; i += step){
     sumR += imgBuffer[i]; 
   }
   sumR = Math.floor(sumR/height);
-  sumR = brightnessCorrection(sumR,config.brightnessDiv);
 
   // prepare result
   const buf = Buffer.allocUnsafe(3);
@@ -126,26 +88,6 @@ function captureScreenArea(x,y,width,height){
   buf.writeUInt8(sumG, 1);
   buf.writeUInt8(sumR, 2);
   return buf;
-}
-
-// new implementation, now broken
-function captureScreenAreaNew(x,y,width,height){
-  let color = [];
-  for (let i = 0; i < width; i++) {
-    for (let j = 0; j < height; j++) {
-      color.push(robot.screen.capture(x,y,width,height).colorAt(i,j));
-    }
-  }
-  
-  console.log(color);
-  let sumR = 0;
-  let sumG = 0;
-  let sumB = 0;
-
-  const buf = Buffer.allocUnsafe(3);
-  buf.writeUInt8(sumB, 0);
-  buf.writeUInt8(sumG, 1);
-  buf.writeUInt8(sumR, 2);
 }
 
 // main screen capture mode, it makes median color from display sides
@@ -169,7 +111,6 @@ server.on('message',function(msg,info){
   console.log('Received %d bytes from %s:%d\n',msg.length, info.address, info.port);
   captureMode = msg.toString();
 });
-
 
 // ==== run ==== //
 init();
