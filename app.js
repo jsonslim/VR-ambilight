@@ -178,7 +178,7 @@ setInterval(()=>{
     server.send([l1,l2,l3,l4], config.boardPort, config.boardIp);
   }
   else if(captureMode === "dispArea"){ 
-    captureScreen(10, 540); // width, height
+    captureScreen(1, 540); // width, height
     server.send([l1,l2,l3,l4], config.boardPort, config.boardIp);
   }
   else if(captureMode === "standby"){ 
