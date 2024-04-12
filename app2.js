@@ -43,7 +43,7 @@ function init() {
 
 		//emits after the socket is closed using socket.close(); ???
 		server.on('close', function () {
-			console.log('Socket is closed !');
+			console.log('Socket is closed!');
 		});
 
 		server.bind({
@@ -57,9 +57,9 @@ function init() {
 
 // accepts only 6 bytes format, like '27ae60'
 function hexToRgb(hex) {
-	var r = parseInt(hex.slice(0, 2), 16);
-	var g = parseInt(hex.slice(2, 4), 16);
-	var b = parseInt(hex.slice(4, 6), 16);
+	const r = parseInt(hex.slice(0, 2), 16);
+	const g = parseInt(hex.slice(2, 4), 16);
+	const b = parseInt(hex.slice(4, 6), 16);
 	return [r, g, b];
 }
 
@@ -132,3 +132,4 @@ setInterval(() => {
 		/* we wait*/
 	}
 }, 1000 / config.refreshRate);
+
