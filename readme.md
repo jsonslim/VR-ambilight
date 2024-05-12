@@ -17,5 +17,4 @@ The app is in the proof-of-concept stage, which means that you can try experimen
 ## Now it has couple of inconviniences: 
 
 * If you have multiple monitors, you can't select which one is captured. Currently the app catches only the 1st display. So you will need to drag the SteamVR window to this display.
-* It captures actual PC display, giving not precise color representation.
 
