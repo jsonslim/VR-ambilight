@@ -1,9 +1,10 @@
 # VR_Ambilight for PCVR
-
-This repo contains server app, which sends color data via UDP to specified address, and arduino project for a ESP32.
+Experimental project of building the side lightning for the VR headset.
 
 # Demo video:
 [![Watch the video](https://img.youtube.com/vi/XxgsGAq9SQI/0.jpg)](https://youtu.be/XxgsGAq9SQI)
+
+This repo contains server app, which sends color data via UDP to specified address, and arduino project for a ESP32.
 
 # Installation:
 
