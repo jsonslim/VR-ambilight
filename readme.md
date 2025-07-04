@@ -2,7 +2,7 @@
 
 This repo contains server app, which sends color data via UDP to specified address, and arduino project for a ESP32.
 
-
+# Demo: https://youtu.be/XxgsGAq9SQI?si=FUPtocxNdQw92zU9
 # Installation:
 
 The app doesn't require installation process, just unpack it to any folder and run the "node.exe". 
