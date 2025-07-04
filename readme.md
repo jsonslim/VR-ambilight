@@ -4,7 +4,8 @@ Experimental project of building the side lightning for the VR headset.
 # Demo video:
 [![Watch the video](https://img.youtube.com/vi/XxgsGAq9SQI/0.jpg)](https://youtu.be/XxgsGAq9SQI)
 
-This repo contains server app, which sends color data via UDP to specified address, and arduino project for a ESP32.
+# Description:
+The server app takes screenshots --> calculates average color on the left and right sides --> sends the color data via UDP to the ESP32 module mounted on the VR headset.
 
 # Installation:
 
